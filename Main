@@ -1,0 +1,424 @@
+package com.company;
+
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
+import java.util.Random;
+
+public class Main extends JPanel implements ActionListener, MouseListener, KeyListener {
+	
+	private static final int HEIGHT = 750, WIDTH = 500;                                                      // Screen size
+	private static JFrame frame = new JFrame();                                                              // Create new Frame
+	private int ballX = 250, ballY = 50;                                                                     // Set ball's XButton and Y
+	private int firstLineStartX = 202, firstLineStartY = 550, firstLineEndX = 300, firstLineEndY = 550;      // Set up first line
+	private int secondLineStartX = 200, secondLineStartY = 550, secondLineEndX = 250, secondLineEndY = 650;  // Set up second line
+	private int thirdLineStartX = 300, thirdLineStartY = 550, thirdLineEndX = 252, thirdLineEndY = 650;      // Set up third line
+	private int speedX = 4, speedY = 4;                                                                      // Set X and Y speed
+	private int triangleSpeed = 3;                                                                           // Set up triangle moving speed
+	private int ballSize = 50;                                                                               // Ball's width and height
+	private Color firstLineColor = Color.RED, secondLineColor = Color.GREEN, thirdLineColor = Color.BLUE;    // Set up colors
+	private int topLineY = 550, topLineStartX = 202, topLineEndX = 300;                                      // Find top line
+	private int value300 = 300, value202 = 202;                                                              // Handle moving
+	private int score = 0;                                                                                   // Handle the score
+	private Color color = Color.RED, topLineColor = Color.RED;                                               // Set up colors
+	private boolean right, secondRight, thirdRight;                                                          // I do not know hot to explain this to you...
+	private JLabel XButton = new JLabel("X");                                                           // Exit button
+	private JLabel pauseBtn = new JLabel("||");                                                         // Pause Button
+	private boolean paused = false;                                                                          // isPaused value
+	
+	
+	// Constructor
+	private Main () {
+		
+		this.setBackground(Color.DARK_GRAY);
+		
+		addKeyListener(this);
+		setFocusable(true);
+		setFocusTraversalKeysEnabled(true);
+		
+		
+		XButton.addMouseListener(this);
+		XButton.setForeground(Color.RED);
+		this.add(XButton);
+		
+		pauseBtn.setForeground(Color.BLUE);
+		pauseBtn.addMouseListener(this);
+		this.add(pauseBtn);
+		
+		Timer timer = new Timer(5, this);
+		timer.setDelay(30);
+		timer.start();
+		
+	}
+	
+	// Main method
+	public static void main (String[] args) {
+		// write your code here
+		// Set up the frame
+		frame.setUndecorated(true);
+		frame.setSize(WIDTH, HEIGHT);
+		frame.setLocationRelativeTo(null);
+		
+		frame.add(new Main());
+		frame.setVisible(true);
+	}
+	
+	
+	// Draw all the stuff
+	@Override
+	protected void paintComponent (Graphics g) {
+		super.paintComponent(g);
+		Graphics2D graphics2D = (Graphics2D) g;
+		
+		// Set up the buttons(exit and pause buttons)
+		XButton.setBounds(10, 10, 15, 15);
+		pauseBtn.setBounds(30, 10, 15, 15);
+		
+		// Draw ball
+		graphics2D.setColor(color);
+		Ellipse2D circle = new Ellipse2D.Double(ballX, ballY, ballSize, ballSize);
+		graphics2D.fill(circle);
+		
+		// Draw red line
+		graphics2D.setColor(firstLineColor);
+		graphics2D.setStroke(new BasicStroke(5));
+		graphics2D.drawLine(firstLineStartX, firstLineStartY, firstLineEndX, firstLineEndY);
+		
+		// Draw green line
+		graphics2D.setColor(secondLineColor);
+		graphics2D.drawLine(secondLineStartX, secondLineStartY, secondLineEndX, secondLineEndY);
+		
+		// Draw blue line
+		graphics2D.setColor(thirdLineColor);
+		graphics2D.drawLine(thirdLineStartX, thirdLineStartY, thirdLineEndX, thirdLineEndY);
+		
+		// Draw score
+		graphics2D.setColor(Color.WHITE);
+		graphics2D.drawString("Score: " + score, 425, 22);
+		
+	}
+	
+	
+	// Control everything
+	@Override
+	public void actionPerformed (ActionEvent e) {
+		
+		// if ball is at the left/0 x value
+		if (ballX <= 0) {
+			speedX = -speedX;
+		}
+		
+		// if ball is at the right/500 -1 x value
+		if (ballX + ballSize >= WIDTH - 1) {
+			speedX = -speedX;
+		}
+		
+		// if ball is at the top/0 y value
+		if (ballY <= 0) {
+			speedY = -speedY;
+		}
+		
+		// if the ball is at the bottom/750 y value
+		if (ballY + ballSize >= HEIGHT) {
+			speedY = -speedY;
+		}
+		
+		// if ball is touching line/x and y values
+		if (ballY + ballSize >= topLineY) {
+			if (ballX + ballSize >= topLineStartX && ballX - ballSize <= topLineEndX) {
+				if (color == topLineColor) {
+					speedY = -speedY;
+					setColor();
+					score++;
+				} else {
+					if (!paused)
+						gameOver();
+				}
+			} else {
+				if (!paused)
+					gameOver();
+			}
+		}
+		
+		
+		if (topLineStartX <= 0)
+			moveRight();
+		if (topLineEndX >= WIDTH)
+			moveLeft();
+		
+		
+		// Update XButton and Y for the ball if game is not paused
+		if (!paused) {
+			ballX += speedX;
+			ballY += speedY;
+		}
+		
+		// Reorganize lines
+		// If user for the first time pressed space
+		if (right) {
+			if (!(firstLineStartX >= value300)) {
+				
+				firstLineStartX += 4;
+				firstLineEndX -= 2;
+				firstLineEndY += 4;
+				
+				secondLineEndX += 2;
+				secondLineEndY -= 4;
+				
+				thirdLineStartX -= 4;
+				
+				topLineColor = secondLineColor;
+				
+			}
+		}
+		
+		// If user for the second time pressed space
+		if (secondRight) {
+			if (!(firstLineStartX <= value202)) {
+				
+				firstLineStartX -= 4;
+				
+				secondLineEndX -= 2;
+				secondLineStartX += 4;
+				secondLineEndY += 4;
+				
+				thirdLineEndX += 2;
+				thirdLineEndY -= 4;
+				
+				topLineColor = thirdLineColor;
+				
+			}
+		}
+		
+		// If user for the third time pressed space
+		if (thirdRight) {
+			if (!(firstLineEndX >= value300)) {
+				
+				firstLineEndX += 2;
+				firstLineEndY -= 4;
+				
+				secondLineStartX -= 4;
+				
+				thirdLineStartX += 4;
+				thirdLineEndX -= 2;
+				thirdLineEndY += 4;
+				
+				topLineColor = firstLineColor;
+				
+			}
+		}
+		
+		repaint();
+	}
+	
+	// exit if user clicks XButton(JLabel with text("X");
+	
+	// pause game if user clicks pauseButton
+	@Override
+	public void mouseClicked (MouseEvent e) {
+		
+		if (e.getSource() == XButton) {
+			System.exit(1);
+		} else if (e.getSource() == pauseBtn) {
+			paused = !paused;
+		}
+		
+	}
+	
+	@Override
+	public void mousePressed (MouseEvent e) {
+	}
+	
+	@Override
+	public void mouseReleased (MouseEvent e) {
+	}
+	
+	// Change text color when user set mouse over it
+	
+	@Override
+	public void mouseEntered (MouseEvent e) {
+		
+		if (e.getSource() == XButton)
+			XButton.setForeground(Color.PINK);
+		else if (e.getSource() == pauseBtn) {
+			pauseBtn.setForeground(Color.CYAN);
+		}
+		
+	}
+	
+	@Override
+	public void mouseExited (MouseEvent e) {
+		
+		if (e.getSource() == XButton)
+			XButton.setForeground(Color.RED);
+		else if (e.getSource() == pauseBtn) {
+			pauseBtn.setForeground(Color.BLUE);
+		}
+		
+	}
+	
+	
+	@Override
+	public void keyTyped (KeyEvent e) {
+	}
+	
+	
+	@Override
+	public void keyPressed (KeyEvent e) {
+		int code = e.getKeyCode();
+		
+		switch (code) {
+			case KeyEvent.VK_LEFT:
+				
+				if (!paused)
+					moveLeft();
+				break;
+			
+			case KeyEvent.VK_RIGHT:
+				
+				if (!paused)
+					moveRight();
+				break;
+			
+			case KeyEvent.VK_SPACE:
+				repaint();
+				
+				if (thirdRight) {
+					
+					if (firstLineEndX >= value300) {
+						right = true;
+						secondRight = false;
+						thirdRight = false;
+						break;
+					}
+					
+				} else if (secondRight) {
+					
+					if (firstLineStartX <= value202) {
+						right = false;
+						secondRight = false;
+						thirdRight = true;
+						break;
+						
+					}
+					
+				} else if (right) {
+					
+					if ((firstLineStartX >= value300)) {
+						right = false;
+						secondRight = true;
+						thirdRight = false;
+						break;
+					}
+					
+				} else {
+					
+					right = true;
+					secondRight = false;
+					thirdRight = false;
+					break;
+					
+				}
+			
+		}
+	}
+	
+	@Override
+	public void keyReleased (KeyEvent e) {
+	}
+	
+	
+	private void setColor () {
+		Random random = new Random();
+		
+		int randomColor = random.nextInt(3);
+		
+		switch (randomColor) {
+			case 0:
+				color = Color.RED;
+				break;
+			case 1:
+				color = Color.BLUE;
+				break;
+			case 2:
+				color = Color.GREEN;
+				break;
+			
+			default:
+				color = Color.RED;
+				break;
+		}
+	}
+	
+	private void moveRight () {
+		value202 += triangleSpeed;
+		value300 += triangleSpeed;
+		
+		topLineStartX += triangleSpeed;
+		topLineEndX += triangleSpeed;
+		
+		firstLineStartX += triangleSpeed;
+		firstLineEndX += triangleSpeed;
+		
+		secondLineStartX += triangleSpeed;
+		secondLineEndX += triangleSpeed;
+		
+		thirdLineStartX += triangleSpeed;
+		thirdLineEndX += triangleSpeed;
+	}
+	
+	private void moveLeft () {
+		value202 -= triangleSpeed;
+		value300 -= triangleSpeed;
+		
+		topLineStartX -= triangleSpeed;
+		topLineEndX -= triangleSpeed;
+		
+		firstLineStartX -= triangleSpeed;
+		firstLineEndX -= triangleSpeed;
+		
+		secondLineStartX -= triangleSpeed;
+		secondLineEndX -= triangleSpeed;
+		
+		thirdLineStartX -= triangleSpeed;
+		thirdLineEndX -= triangleSpeed;
+	}
+	
+	private void gameOver () {
+		paused = true;
+		JFrame jFrame = new JFrame("Game Over");
+		jFrame.setUndecorated(true);
+		jFrame.setSize(500, 300);
+		jFrame.setLocationRelativeTo(null);
+		
+		JButton repeat = new JButton("Repeat");
+		JButton exit = new JButton("Exit");
+		JPanel panel = new JPanel();
+		
+		repeat.setBackground(Color.DARK_GRAY);
+		repeat.addActionListener(e -> {
+			
+			paused = false;
+			jFrame.setVisible(false);
+			jFrame.dispose();
+			ballX = 250;
+			ballY = 50;
+			score = 0;
+			
+		});
+		
+		exit.setBounds(150, 120, 200, 50);
+		exit.setBackground(Color.DARK_GRAY);
+		exit.addActionListener(e -> System.exit(2));
+		
+		panel.add(repeat);
+		panel.add(exit);
+		panel.setBackground(Color.GRAY);
+		
+		jFrame.add(panel);
+		jFrame.setVisible(true);
+	}
+	
+}
